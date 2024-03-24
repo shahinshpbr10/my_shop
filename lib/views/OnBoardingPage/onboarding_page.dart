@@ -3,11 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/common/widgets/build_onboarding_page.dart';
 import 'package:my_shop/constants/color.dart';
 import 'package:my_shop/views/auth/loginpage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
-
+  const OnboardingPage({super.key, required this.prefs});
+  final SharedPreferences prefs;
   @override
   _OnboardingPageState createState() => _OnboardingPageState();
 }
@@ -67,11 +68,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 borderRadius: BorderRadius.circular(
                                     15.0), // Set the border radius
                               )),
-                          onPressed: () {
+                          onPressed: () async {
+                            await widget.prefs.setBool('seenOnBoarding',
+                                true); // Use widget.prefs here
                             Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (context) {
-                              return const LoginScreen();
-                            }));
+                              MaterialPageRoute(builder: (context) {
+                                return const LoginScreen();
+                              }),
+                            );
                           },
                           child: Text(
                             'Get Started',
@@ -91,11 +95,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        await widget.prefs.setBool(
+                            'seenOnBoarding', true); // Use widget.prefs here
                         Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) {
-                          return const LoginScreen();
-                        }));
+                          MaterialPageRoute(builder: (context) {
+                            return const LoginScreen();
+                          }),
+                        );
                       },
                       child: Text(
                         'Skip',

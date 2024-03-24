@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:givestarreviews/givestarreviews.dart';
+import 'package:my_shop/Backend/fetchhelpers.dart';
 import 'package:my_shop/common/widgets/widgets/managment_card.dart';
 import 'package:my_shop/constants/color.dart';
 import 'package:my_shop/views/auth/loginpage.dart';
@@ -11,6 +13,8 @@ class HomeTab extends StatefulWidget {
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
+
+final FetchHelpers fetchHelpers = FetchHelpers();
 
 class _HomeTabState extends State<HomeTab> {
   @override
@@ -38,23 +42,70 @@ class _HomeTabState extends State<HomeTab> {
                   width: double.infinity,
                   child: Row(
                     children: [
-                      const CircleAvatar(
-                        radius: 20,
-                        backgroundImage:
-                            AssetImage("assets/images/profile.png"),
+                      FutureBuilder<String>(
+                        future: fetchHelpers.fetchUserProfilePictureUrl(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<String> snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            // While waiting for the data, show a placeholder
+                            return CircleAvatar(
+                              radius: 20,
+                              backgroundImage: AssetImage(
+                                  "assets/images/profile.png"), // Placeholder image
+                            );
+                          } else if (snapshot.hasError ||
+                              snapshot.data!.isEmpty) {
+                            // In case of an error or if the URL is empty, show a default avatar
+                            return CircleAvatar(
+                              radius: 20,
+                              backgroundImage: AssetImage(
+                                  "assets/images/profile.png"), // Default image
+                            );
+                          } else {
+                            // When data is fetched successfully, show the profile picture
+                            return CircleAvatar(
+                              radius: 20,
+                              backgroundImage: NetworkImage(snapshot
+                                  .data!), // Fetched profile picture URL
+                              backgroundColor: Colors.transparent,
+                            );
+                          }
+                        },
                       ),
                       const SizedBox(
                         width: 10,
                       ),
-                      const Column(
+                      Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Good morning",
+                            "Good morning....",
+                            style: Theme.of(context).textTheme.headlineMedium,
                           ),
-                          Text(
-                            "John Doe", // Replace with the actual username
+                          FutureBuilder<String>(
+                            future: fetchHelpers
+                                .fetchUserName(), // Fetch the user name
+                            builder: (BuildContext context,
+                                AsyncSnapshot<String> snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Text(
+                                    "Loading..."); // Optionally handle loading state
+                              } else if (snapshot.hasError) {
+                                return Text(
+                                    "Error: ${snapshot.error}"); // Error handling
+                              } else {
+                                return Text(
+                                  snapshot.data!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall, // Display the fetched name
+                                  // Add text style if needed
+                                );
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -94,8 +145,8 @@ class _HomeTabState extends State<HomeTab> {
                       animationDuration: 1200,
                       circularStrokeCap: CircularStrokeCap.round,
                       header: const Padding(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 5),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                         child: Text(
                           "Today's Sale",
                         ),
@@ -153,7 +204,8 @@ class _HomeTabState extends State<HomeTab> {
                 height: 70,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(20)),
                 child: Column(

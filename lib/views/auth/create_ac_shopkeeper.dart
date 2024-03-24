@@ -19,6 +19,7 @@ class ShopkeeperAccountScreen extends StatefulWidget {
 class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   String _shopName = '';
+  String _OwnerName = '';
   String _shopAddress = '';
   String _contactNumber = '';
   String _email = '';
@@ -102,6 +103,7 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
               .collection('shopkeepers')
               .doc(userCredential.user!.uid)
               .set({
+            'ownerName': _OwnerName,
             'shopName': _shopName,
             'shopAddress': _shopAddress,
             'contactNumber': _contactNumber,
@@ -182,7 +184,8 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
                                           },
                                         ),
                                         ListTile(
-                                          leading: const Icon(Icons.photo_library),
+                                          leading:
+                                              const Icon(Icons.photo_library),
                                           title: const Text('Gallery'),
                                           onTap: () {
                                             _pickImageShop(ImageSource.gallery);
@@ -247,7 +250,8 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
                                           },
                                         ),
                                         ListTile(
-                                          leading: const Icon(Icons.photo_library),
+                                          leading:
+                                              const Icon(Icons.photo_library),
                                           title: const Text('Gallery'),
                                           onTap: () {
                                             _pickLogoShop(ImageSource.gallery);
@@ -309,7 +313,7 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
                     return null;
                   },
                   onSaved: (value) {
-                    _shopName = value!;
+                    _OwnerName = value!;
                   },
                 ),
                 const SizedBox(height: 16.0),
