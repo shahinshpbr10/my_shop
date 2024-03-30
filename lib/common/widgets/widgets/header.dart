@@ -34,23 +34,23 @@ class TopCardSection extends StatelessWidget {
           AppDimensions.vSpace(3),
           const SearchBox(),
           AppDimensions.vSpace(3),
-          Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text("Discover Exclusive Shopper's Delights!",
-                          style: Theme.of(context).textTheme.headlineMedium),
-                    ],
-                  ),
-                ],
-              ),
-              AppDimensions.vSpace(2),
-              const UpcomingScheduleCard()
-            ],
-          ),
+          // Column(
+          //   children: [
+          //     Row(
+          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //       children: [
+          //         Row(
+          //           children: [
+          //             Text("Discover Exclusive Shopper's Delights!",
+          //                 style: Theme.of(context).textTheme.headlineMedium),
+          //           ],
+          //         ),
+          //       ],
+          //     ),
+          //     AppDimensions.vSpace(2),
+          //     const UpcomingScheduleCard()
+          //   ],
+          // ),
           AppDimensions.vSpace(1),
         ],
       ),
@@ -68,14 +68,14 @@ class TopCardSection extends StatelessWidget {
               builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   // While waiting for the data, show a placeholder
-                  return CircleAvatar(
+                  return const CircleAvatar(
                     radius: 20,
                     backgroundImage: AssetImage(
                         "assets/images/profile.png"), // Placeholder image
                   );
                 } else if (snapshot.hasError || snapshot.data!.isEmpty) {
                   // In case of an error or if the URL is empty, show a default avatar
-                  return CircleAvatar(
+                  return const CircleAvatar(
                     radius: 20,
                     backgroundImage: AssetImage(
                         "assets/images/profile.png"), // Default image
@@ -95,7 +95,7 @@ class TopCardSection extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "Good morning",
                   style: TextStyle(fontSize: 30),
                 ),

@@ -29,6 +29,7 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
   Position? _shopLocation;
   bool viewPassword = true;
   final String _userRole = 'shopkeeper';
+  String? _selectedItem;
 
   Future<void> _pickImageShop(ImageSource source) async {
     final pickedImage = await ImagePicker().pickImage(source: source);
@@ -77,7 +78,6 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
           email: _email,
           password: _password,
         );
-
         String? imageUrl;
         if (_shopImage != null) {
           Reference storageReference = FirebaseStorage.instance
@@ -87,7 +87,6 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
           TaskSnapshot taskSnapshot = await uploadTask;
           imageUrl = await taskSnapshot.ref.getDownloadURL();
         }
-
         String? logoUrl;
         if (_shopLogo != null) {
           Reference storageReference = FirebaseStorage.instance
@@ -97,7 +96,6 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
           TaskSnapshot taskSnapshot = await uploadTask;
           logoUrl = await taskSnapshot.ref.getDownloadURL();
         }
-
         if (_userRole == 'shopkeeper') {
           await FirebaseFirestore.instance
               .collection('shopkeepers')
@@ -110,18 +108,14 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
             'email': _email,
             'shopImageUrl': imageUrl,
             'shopLogoUrl': logoUrl,
+            'shoptype': _selectedItem,
             'location': _shopLocation != null
-                ? {
-                    'latitude': _shopLocation!.latitude,
-                    'longitude': _shopLocation!.longitude
-                  }
+                ? GeoPoint(_shopLocation!.latitude, _shopLocation!.longitude)
                 : null,
           });
         } else if (_userRole == 'customer') {
           return;
         }
-
-        // Navigate or show a success message
         print("Account created successfully!");
       } catch (e) {
         print("Error creating account: $e");
@@ -426,6 +420,30 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
                   onSaved: (value) {
                     _contactNumber = value!;
                   },
+                ),
+                Row(
+                  children: [
+                    DropdownButton<String>(
+                      value: _selectedItem,
+                      hint: Text("Select shop Type"),
+                      items: <String>[
+                        'Super market',
+                        'electronics',
+                        'hypermarket',
+                        'other'
+                      ].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedItem = value;
+                        });
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16.0),
                 SizedBox(

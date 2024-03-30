@@ -21,6 +21,7 @@ class _CustomerAccountCreationScreenState
   String _name = '';
   String _email = '';
   String _password = '';
+  String _phone = '';
   File? _profileImage;
   Position? _currentPosition;
   final String _userRole = 'customer';
@@ -67,7 +68,6 @@ class _CustomerAccountCreationScreenState
           email: _email,
           password: _password,
         );
-
         String? imageUrl;
         if (_profileImage != null) {
           Reference storageReference = FirebaseStorage.instance
@@ -77,27 +77,23 @@ class _CustomerAccountCreationScreenState
           TaskSnapshot taskSnapshot = await uploadTask;
           imageUrl = await taskSnapshot.ref.getDownloadURL();
         }
-
         if (_userRole == 'customer') {
           await FirebaseFirestore.instance
               .collection('Customerusers')
               .doc(userCredential.user!.uid)
               .set({
             'name': _name,
+            'phone': _phone,
             'email': _email,
             'profileImageUrl': imageUrl,
             'location': _currentPosition != null
-                ? {
-                    'latitude': _currentPosition!.latitude,
-                    'longitude': _currentPosition!.longitude
-                  }
+                ? GeoPoint(
+                    _currentPosition!.latitude, _currentPosition!.longitude)
                 : null,
           });
         } else if (_userRole == 'shopkeeper') {
           return;
         }
-
-        // Navigate or show a success message
         print("Account created successfully!");
       } catch (e) {
         print("Error creating account: $e");
@@ -217,6 +213,25 @@ class _CustomerAccountCreationScreenState
                   },
                   onSaved: (value) {
                     _email = value!;
+                  },
+                ),
+                const SizedBox(height: 16.0),
+                TextFormField(
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(22),
+                        borderSide: const BorderSide(color: TColors.primary)),
+                    labelText: 'Phone number',
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _phone = value!;
                   },
                 ),
                 const SizedBox(height: 16.0),

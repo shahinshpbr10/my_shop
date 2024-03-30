@@ -23,7 +23,7 @@ class App extends StatelessWidget {
           future: SharedPreferences.getInstance(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
             }
             final prefs = snapshot.data as SharedPreferences;
             final bool seenOnBoarding =
@@ -40,12 +40,12 @@ class App extends StatelessWidget {
                       snapshot.hasData) {
                     final String role = snapshot.data!;
                     if (role == 'customer') {
-                      return CustomerHome();
+                      return const CustomerHome();
                     } else if (role == 'shopkeeper') {
-                      return ShopkeeperHome();
+                      return const ShopkeeperHome();
                     }
                   }
-                  return CircularProgressIndicator(); // Show loading while fetching user data
+                  return const CircularProgressIndicator(); // Show loading while fetching user data
                 },
               );
             } else if (!seenOnBoarding) {
@@ -53,7 +53,7 @@ class App extends StatelessWidget {
               return OnboardingPage(prefs: prefs);
             } else {
               // User is not logged in
-              return LoginScreen();
+              return const LoginScreen();
             }
           },
         ));

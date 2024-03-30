@@ -13,8 +13,7 @@ class FetchHelpers {
         .get();
 
     if (shopkeeperDocSnapshot.exists) {
-      final shopkeeperData =
-          shopkeeperDocSnapshot.data() as Map<String, dynamic>?;
+      final shopkeeperData = shopkeeperDocSnapshot.data();
       return shopkeeperData?['ownerName'] ?? 'Name Not Set';
     } else {
       // If not found in 'shopkeepers', attempt to fetch from the 'Customerusers' collection
@@ -24,8 +23,7 @@ class FetchHelpers {
           .get();
 
       if (customerDocSnapshot.exists) {
-        final customerData =
-            customerDocSnapshot.data() as Map<String, dynamic>?;
+        final customerData = customerDocSnapshot.data();
         return customerData?['name'] ??
             'Name Not Set'; // Adjust the field name as per your Firestore schema
       }
@@ -45,8 +43,7 @@ class FetchHelpers {
         .get();
 
     if (shopkeeperDocSnapshot.exists) {
-      final shopkeeperData =
-          shopkeeperDocSnapshot.data() as Map<String, dynamic>?;
+      final shopkeeperData = shopkeeperDocSnapshot.data();
       if (shopkeeperData?['shopLogoUrl'] != null) {
         return shopkeeperData!['shopLogoUrl'];
       }
@@ -59,7 +56,7 @@ class FetchHelpers {
         .get();
 
     if (customerDocSnapshot.exists) {
-      final customerData = customerDocSnapshot.data() as Map<String, dynamic>?;
+      final customerData = customerDocSnapshot.data();
       if (customerData?['profileImageUrl'] != null) {
         return customerData!['profileImageUrl'];
       }

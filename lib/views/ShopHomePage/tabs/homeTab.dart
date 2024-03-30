@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:givestarreviews/givestarreviews.dart';
 import 'package:my_shop/Backend/fetchhelpers.dart';
 import 'package:my_shop/common/widgets/widgets/managment_card.dart';
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/ShopHomePage/view/add_product_screen.dart';
 import 'package:my_shop/views/auth/loginpage.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -49,7 +49,7 @@ class _HomeTabState extends State<HomeTab> {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             // While waiting for the data, show a placeholder
-                            return CircleAvatar(
+                            return const CircleAvatar(
                               radius: 20,
                               backgroundImage: AssetImage(
                                   "assets/images/profile.png"), // Placeholder image
@@ -57,7 +57,7 @@ class _HomeTabState extends State<HomeTab> {
                           } else if (snapshot.hasError ||
                               snapshot.data!.isEmpty) {
                             // In case of an error or if the URL is empty, show a default avatar
-                            return CircleAvatar(
+                            return const CircleAvatar(
                               radius: 20,
                               backgroundImage: AssetImage(
                                   "assets/images/profile.png"), // Default image
@@ -245,7 +245,7 @@ class _HomeTabState extends State<HomeTab> {
                           onTap: () {
                             Navigator.of(context)
                                 .push(MaterialPageRoute(builder: (context) {
-                              return const LoginScreen();
+                              return const AddProductScreen();
                             }));
                           },
                           child: Column(
