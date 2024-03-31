@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_shop/constants/color.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,23 +30,18 @@ class ShopDetailsScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
               Text(
                 'Owner: ${shopData['ownerName']}',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8.0),
               Text(
-                'Shop Type: ${shopData['shoptype']}',
-                style: Theme.of(context).textTheme.headline6,
+                'Shop Type: ${shopData['shopType']}',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8.0),
               Text(
                 'Address: ${shopData['shopAddress']}',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 8.0),
-              // Text(
-              //   'Description: ${shopData['description']}',
-              //   style: Theme.of(context).textTheme.bodyText1,
-              // ),
               const SizedBox(height: 16.0),
               Row(
                 children: [
@@ -53,7 +49,7 @@ class ShopDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8.0),
                   Text(
                     'Phone: ${shopData['contactNumber']}',
-                    style: Theme.of(context).textTheme.bodyText1,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],
               ),
@@ -64,7 +60,7 @@ class ShopDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8.0),
                   Text(
                     'Email: ${shopData['email']}',
-                    style: Theme.of(context).textTheme.bodyText1,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],
               ),
@@ -73,20 +69,25 @@ class ShopDetailsScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
-                      _launchURL(shopData['websiteUrl']);
-                    },
+                    onPressed: () =>
+                        _launchURL(shopData['websiteUrl'], context),
                     child: const Text('Visit Website'),
                   ),
                   const SizedBox(width: 16.0),
                   ElevatedButton(
-                    onPressed: () {
-                      _makePhoneCall(shopData['contactNumber']);
-                    },
+                    onPressed: () =>
+                        _makePhoneCall(shopData['contactNumber'], context),
                     child: const Text('Call'),
                   ),
                 ],
               ),
+              const SizedBox(height: 16.0),
+              Text(
+                "Available Products from Shop",
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 16.0),
+              _buildProductList(context),
             ],
           ),
         ),
@@ -94,19 +95,117 @@ class ShopDetailsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _launchURL(String url) async {
+  Future<void> _launchURL(String url, BuildContext context) async {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
-      throw 'Could not launch $url';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not launch $url'),
+        ),
+      );
     }
   }
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
+  Future<void> _makePhoneCall(String phoneNumber, BuildContext context) async {
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not place call to $phoneNumber'),
+        ),
+      );
+    }
+  }
+
+  Widget _buildProductList(BuildContext context) {
+    final String? shopId = shopData['shopId'];
+    if (shopId == null) {
+      print('Shop ID is null.');
+      return const Text('Shop ID is not available.');
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('products')
+          .where('shopId', isEqualTo: shopId)
+          .orderBy('name') // Make sure the index for this query is created.
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          print('Snapshot error: ${snapshot.error}');
+          return Text('Error: ${snapshot.error}');
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          print('No products found for shopId: $shopId');
+          return const Text('No products available for this shop.');
+        }
+
+        print('${docs.length} products found for shopId: $shopId');
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8.0,
+            crossAxisSpacing: 8.0,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            var productData = docs[index].data() as Map<String, dynamic>;
+            var productImageUrl = productData['imageUrl'] as String? ??
+                'https://via.placeholder.com/150'; // Provide a placeholder image URL
+            var productName = productData['name'] as String? ?? 'No Name';
+            var productPrice = productData['price'].toString();
+
+            return Card(
+              clipBehavior: Clip.antiAlias, // Add this for rounded corners
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Image.network(
+                      productImageUrl,
+                      fit: BoxFit
+                          .cover, // Cover the area without stretching the image
+                      width: double.infinity, // Cover the width of the card
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          productName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow
+                              .ellipsis, // Prevent long names from breaking the layout
+                        ),
+                        SizedBox(height: 4),
+                        Text('\$$productPrice', // Display the price
+                            style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
-    await launchUrl(launchUri);
   }
 }

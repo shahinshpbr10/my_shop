@@ -101,6 +101,7 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
               .collection('shopkeepers')
               .doc(userCredential.user!.uid)
               .set({
+            'shopId': userCredential.user!.uid,
             'ownerName': _OwnerName,
             'shopName': _shopName,
             'shopAddress': _shopAddress,
@@ -425,7 +426,7 @@ class _ShopkeeperAccountScreenState extends State<ShopkeeperAccountScreen> {
                   children: [
                     DropdownButton<String>(
                       value: _selectedItem,
-                      hint: Text("Select shop Type"),
+                      hint: const Text("Select shop Type"),
                       items: <String>[
                         'Super market',
                         'electronics',

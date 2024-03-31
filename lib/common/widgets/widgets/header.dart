@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:my_shop/Backend/fetchhelpers.dart';
-import 'package:my_shop/common/widgets/widgets/home_offers.dart';
 import 'package:my_shop/common/widgets/widgets/search_box.dart';
 import 'package:my_shop/constants/color.dart';
 import 'package:my_shop/dimension/dimens.dart';

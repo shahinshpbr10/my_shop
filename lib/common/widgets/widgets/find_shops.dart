@@ -77,7 +77,7 @@ class _ShopsNearCustomerState extends State<ShopsNearCustomer> {
                             children: [
                               Row(
                                 children: [
-                                  Text('Owner:'),
+                                  const Text('Owner:'),
                                   Text(data['ownerName']),
                                 ],
                               ),

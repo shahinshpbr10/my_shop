@@ -4,6 +4,7 @@ import 'package:my_shop/Backend/fetchhelpers.dart';
 import 'package:my_shop/common/widgets/widgets/managment_card.dart';
 import 'package:my_shop/constants/color.dart';
 import 'package:my_shop/views/ShopHomePage/view/add_product_screen.dart';
+import 'package:my_shop/views/ShopHomePage/view/available_stock_page.dart';
 import 'package:my_shop/views/auth/loginpage.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -296,7 +297,13 @@ class _HomeTabState extends State<HomeTab> {
                               labeltext: "view bills"),
                         ),
                         InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (context) {
+                                return AvailableStockPage();
+                              },
+                            ));
+                          },
                           child: const ManagmentCard(
                               imageurl: "assets/icons/in-stock.png",
                               labeltext: "Stocks"),
