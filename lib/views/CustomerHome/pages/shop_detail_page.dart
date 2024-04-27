@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/CustomerHome/managers/cart_manager.dart';
+import 'package:my_shop/views/CustomerHome/pages/product_detail_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ShopDetailsScreen extends StatelessWidget {
@@ -167,40 +170,57 @@ class ShopDetailsScreen extends StatelessWidget {
             var productName = productData['name'] as String? ?? 'No Name';
             var productPrice = productData['price'].toString();
 
-            return Card(
-              clipBehavior: Clip.antiAlias, // Add this for rounded corners
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Image.network(
-                      productImageUrl,
-                      fit: BoxFit
-                          .cover, // Cover the area without stretching the image
-                      width: double.infinity, // Cover the width of the card
+            return GestureDetector(
+              onTap: () {
+                var availableSizes =
+                    Set<String>.from(productData['sizes'] ?? []);
+                // Navigate to the product detail page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductDetailScreen(
+                      productData: productData,
+                      availableSizes: availableSizes,
+                     
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          productName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                );
+              },
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Image.network(
+                        productImageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            productName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow
-                              .ellipsis, // Prevent long names from breaking the layout
-                        ),
-                        SizedBox(height: 4),
-                        Text('\$$productPrice', // Display the price
-                            style: TextStyle(fontSize: 14)),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            '\$$productPrice',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

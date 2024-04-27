@@ -1,6 +1,7 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/CustomerHome/managers/cart_manager.dart';
 import 'package:my_shop/views/CustomerHome/tabs/dashboard_tab.dart';
 import 'package:my_shop/views/CustomerHome/tabs/homeTab.dart';
 import 'package:my_shop/views/CustomerHome/tabs/my_order_tab.dart';
@@ -22,7 +23,9 @@ class _CustomerHomeState extends State<CustomerHome> {
     const HomePage(),
     const MyOrdersCustomerPage(),
     const QRScannerScreenCustomer(),
-    const CustomerDashboardPage(),
+    CustomerDashboardPage(
+      cartManager: CartManager(),
+    ),
     const CustomerSettingsTab()
   ];
 

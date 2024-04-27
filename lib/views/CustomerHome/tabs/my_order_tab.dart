@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:my_shop/common/widgets/widgets/pageheading.dart';
 import 'package:my_shop/constants/color.dart';
 
@@ -10,30 +13,7 @@ class MyOrdersCustomerPage extends StatefulWidget {
 }
 
 class _MyOrdersCustomerPageState extends State<MyOrdersCustomerPage> {
-  final List<Map<String, dynamic>> orders = [
-    {
-      'id': 1,
-      'product': 'Product X',
-      'quantity': 2,
-      'total': 60.0,
-      'imageUrl': 'assets/images/profile.png',
-    },
-    {
-      'id': 2,
-      'product': 'Product Y',
-      'quantity': 1,
-      'total': 40.0,
-      'imageUrl': 'assets/images/profile.png',
-    },
-    {
-      'id': 3,
-      'product': 'Product Z',
-      'quantity': 3,
-      'total': 90.0,
-      'imageUrl': 'assets/images/profile.png',
-    },
-    // Add more orders as needed
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +30,36 @@ class _MyOrdersCustomerPageState extends State<MyOrdersCustomerPage> {
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16.0),
-              child: ListView.builder(
-                itemCount: orders.length,
-                itemBuilder: (context, index) {
-                  final order = orders[index];
-                  return buildOrderItem(order);
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _getOrdersStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Error: ${snapshot.error}'),
+                    );
+                  }
+
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  final orders = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    itemCount: orders.length,
+                    itemBuilder: (context, index) {
+                      final order = orders[index];
+                      final orderData = order.data() as Map<String, dynamic>?;
+
+                      if (orderData == null) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return buildOrderItem(orderData);
+                    },
+                  );
                 },
               ),
             ),
@@ -64,38 +69,61 @@ class _MyOrdersCustomerPageState extends State<MyOrdersCustomerPage> {
     );
   }
 
-  Widget buildOrderItem(Map<String, dynamic> order) {
+  Stream<QuerySnapshot> _getOrdersStream() {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final String userId = user.uid;
+      return _firestore
+          .collection('orders')
+          .where('userId', isEqualTo: userId)
+          .snapshots();
+    } else {
+      return const Stream.empty();
+    }
+  }
+
+  Widget buildOrderItem(Map<String, dynamic> orderData) {
+    final items = orderData['items'] as List<dynamic>? ?? [];
     return Card(
       elevation: 0,
       color: TColors.darkContainer,
       margin: const EdgeInsets.only(bottom: 16.0),
       child: ListTile(
-        leading: Image.asset(
-          order['imageUrl'],
-          height: 50, // Adjust the height as needed
-          width: 50, // Adjust the width as needed
-          fit: BoxFit.cover,
-        ),
-        title: Text('Order ${order['id']}'),
+        leading: items.isNotEmpty
+            ? Image.network(
+                items.first['imageUrl'],
+                height: 50,
+                width: 50,
+                fit: BoxFit.cover,
+              )
+            : const SizedBox.shrink(),
+        title: items.isNotEmpty
+            ? Text(items.first['name']) // Use the name of the first item
+            : const Text('No items'), // Or any other appropriate text
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Product: ${order['product']}'),
-            Text('Quantity: ${order['quantity']}'),
-            Text('Total: \$${order['total']}'),
+            Text('Address: ${orderData['address']}'),
+            Text('Payment Method: ${orderData['paymentMethod']}'),
+            Text('Total Items: ${items.length}'),
+            Text(
+              'Total: ${items.map((item) => item['price'])}',
+            ), // Calculate the total from item prices
           ],
         ),
         onTap: () {
-          navigateToOrderDetails(context, order);
+          navigateToOrderDetails(context, orderData);
         },
       ),
     );
   }
 
   void navigateToOrderDetails(
-      BuildContext context, Map<String, dynamic> order) {
+    BuildContext context,
+    Map<String, dynamic> orderData,
+  ) {
     // Add navigation logic to the order details page for customers
     // For now, let's print the order details to the console
-    print('Order Details: $order');
+    print('Order Details: $orderData');
   }
 }

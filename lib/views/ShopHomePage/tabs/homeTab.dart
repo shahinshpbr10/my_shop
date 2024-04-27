@@ -4,6 +4,7 @@ import 'package:my_shop/Backend/fetchhelpers.dart';
 import 'package:my_shop/common/widgets/widgets/managment_card.dart';
 import 'package:my_shop/constants/color.dart';
 import 'package:my_shop/views/ShopHomePage/view/add_product_screen.dart';
+import 'package:my_shop/views/ShopHomePage/view/available_order_page.dart';
 import 'package:my_shop/views/ShopHomePage/view/available_stock_page.dart';
 import 'package:my_shop/views/auth/loginpage.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -216,10 +217,10 @@ class _HomeTabState extends State<HomeTab> {
                       children: [
                         InkWell(
                           onTap: () {
-                            Navigator.of(context)
-                                .push(MaterialPageRoute(builder: (context) {
-                              return const LoginScreen();
-                            }));
+                            // Navigator.of(context)
+                            //     .push(MaterialPageRoute(builder: (context) {
+                            //   // return const ShopkeeperOrdersPage(shopId: shopId);
+                            // }));
                           },
                           child: const ManagmentCard(
                             imageurl: "assets/icons/order-delivery.png",
@@ -300,7 +301,7 @@ class _HomeTabState extends State<HomeTab> {
                           onTap: () {
                             Navigator.push(context, MaterialPageRoute(
                               builder: (context) {
-                                return AvailableStockPage();
+                                return const AvailableStockPage();
                               },
                             ));
                           },

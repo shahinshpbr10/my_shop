@@ -43,7 +43,7 @@ class _AvailableStockPageState extends State<AvailableStockPage> {
                       .collection('products')
                       .where('shopId', isEqualTo: shopId)
                       .where('name', isGreaterThanOrEqualTo: _searchQuery)
-                      .where('name', isLessThan: _searchQuery + 'z')
+                      .where('name', isLessThan: '${_searchQuery}z')
                       .snapshots()
                   : null,
               builder: (context, snapshot) {
@@ -70,10 +70,10 @@ class _AvailableStockPageState extends State<AvailableStockPage> {
                       },
                     );
                   } else {
-                    return Center(
+                    return const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text(
                             'No stock found',
                             style: TextStyle(fontSize: 18),
@@ -150,7 +150,7 @@ class ProductCard extends StatelessWidget {
                 Text('Quantity: $quantity'),
                 Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
                 IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () =>
                       _deleteProduct(context, documentId), // Add this line
                 ),
@@ -194,7 +194,7 @@ class ProductCard extends StatelessWidget {
 
                   // Show a success message
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Product deleted successfully'),
                     ),
                   );

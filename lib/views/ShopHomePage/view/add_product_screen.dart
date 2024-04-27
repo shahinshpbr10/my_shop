@@ -6,10 +6,20 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/ShopHomePage/view/ml_prediction.dart';
 
 Future<void> createProductsCollection() async {
   final firestore = FirebaseFirestore.instance;
   await firestore.collection('products').doc().set({});
+}
+
+enum ProductType {
+  clothing,
+  shoes,
+  bags,
+  cosmetics,
+  foodItems,
+  other,
 }
 
 class AddProductScreen extends StatefulWidget {
@@ -26,6 +36,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   String _productDescription = '';
   int _productQuantity = 1;
   XFile? _imageFile;
+  ProductType? _selectedProductType;
+  Set<String> _selectedSizes = {};
 
   @override
   void initState() {
@@ -58,6 +70,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         'shopId': shopId,
         'imageUrl': imageUrl ?? '',
         'quantity': product.quantity,
+        'productType': product.productType.index, // Store the enum index
+        'sizes': product.sizes, // Include the list of sizes
       }).catchError((error) {
         print('Error adding product to Firestore: $error');
         throw error; // Re-throw the error to be caught by the outer catch block
@@ -79,6 +93,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         description: _productDescription,
         imageUrl: _imageFile != null ? await _uploadImageToStorage() : null,
         quantity: _productQuantity,
+        productType: _selectedProductType ?? ProductType.other,
+        sizes: _selectedSizes, // Pass the list of selected sizes
       );
       final result = await addProduct(shopId, product);
       if (result) {
@@ -127,6 +143,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
+  Set<String> _getSizeOptions(ProductType? productType) {
+    switch (productType) {
+      case ProductType.clothing:
+        return {'Small', 'Medium', 'Large', 'X-Large'};
+      case ProductType.shoes:
+        return {'5', '6', '7', '8', '9', '10'};
+      case ProductType.bags:
+        return {'Small', 'Medium', 'Large'};
+      default:
+        return {};
+    }
+  }
+
+  bool _productTypeSizeRequired(ProductType? productType) {
+    switch (productType) {
+      case ProductType.clothing:
+      case ProductType.shoes:
+      case ProductType.bags:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: TColors.dark,
@@ -219,6 +260,42 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   },
                 ),
                 const SizedBox(height: 20.0),
+                DropdownButtonFormField<ProductType>(
+                  value: _selectedProductType,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedProductType = newValue;
+                      _selectedSizes = {}; // Reset the selected sizes
+                    });
+                  },
+                  items: ProductType.values
+                      .map<DropdownMenuItem<ProductType>>((ProductType value) {
+                    return DropdownMenuItem<ProductType>(
+                      value: value,
+                      child: Text(value.toString().split('.').last),
+                    );
+                  }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Product Type',
+                  ),
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a product type';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20.0),
+                SizeSelectionField(
+                  availableSizes: _getSizeOptions(_selectedProductType),
+                  initialSizes: _selectedSizes,
+                  onChanged: (values) {
+                    setState(() {
+                      _selectedSizes = values;
+                    });
+                  },
+                ),
+                const SizedBox(height: 20.0),
                 ElevatedButton(
                   onPressed: _selectImage,
                   child: const Text('Select Image'),
@@ -232,6 +309,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     }
                   },
                   child: const Text('Submit Product'),
+                ),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (ctx) {
+                      return PricePredictionForm();
+                    }));
+                  },
+                  child: const Text('Check Price of Product Using Ml'),
                 ),
               ],
             ),
@@ -248,6 +334,8 @@ class Product {
   final String description;
   final String? imageUrl;
   final int quantity;
+  final ProductType productType;
+  final Set<String> sizes;
 
   Product({
     required this.name,
@@ -255,5 +343,62 @@ class Product {
     required this.description,
     this.imageUrl,
     required this.quantity,
+    required this.productType,
+    required this.sizes,
   });
+}
+
+class SizeSelectionField extends StatefulWidget {
+  final Set<String> availableSizes;
+  final Set<String> initialSizes;
+  final ValueChanged<Set<String>> onChanged;
+
+  const SizeSelectionField({
+    super.key,
+    required this.availableSizes,
+    required this.initialSizes,
+    required this.onChanged,
+  });
+
+  @override
+  State<SizeSelectionField> createState() => _SizeSelectionFieldState();
+}
+
+class _SizeSelectionFieldState extends State<SizeSelectionField> {
+  late Set<String> _selectedSizes;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSizes = widget.initialSizes;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Size'),
+        Wrap(
+          spacing: 8.0,
+          children: widget.availableSizes.map((size) {
+            return FilterChip(
+              label: Text(size),
+              selected: _selectedSizes.contains(size),
+              onSelected: (isSelected) {
+                setState(() {
+                  if (isSelected) {
+                    _selectedSizes.add(size);
+                  } else {
+                    _selectedSizes.remove(size);
+                  }
+                  widget.onChanged(_selectedSizes);
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 }

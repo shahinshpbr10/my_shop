@@ -1,8 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/CustomerHome/managers/cart_manager.dart';
+import 'package:my_shop/views/CustomerHome/pages/cart_detail_page.dart';
+import 'package:my_shop/views/CustomerHome/pages/cart_page.dart';
 
 class CustomerDashboardPage extends StatefulWidget {
-  const CustomerDashboardPage({super.key});
+  const CustomerDashboardPage({super.key, required this.cartManager});
+  final CartManager cartManager;
 
   @override
   _CustomerDashboardPageState createState() => _CustomerDashboardPageState();
@@ -50,8 +55,6 @@ class _CustomerDashboardPageState extends State<CustomerDashboardPage> {
             _buildSectionTitle('My Favorites', Icons.favorite),
             _buildMyFavorites(),
             const SizedBox(height: 16),
-            _buildSectionTitle('Loyalty Points', Icons.star),
-            _buildLoyaltyPoints(),
             const SizedBox(height: 16),
             _buildSectionTitle('My Cart', Icons.shopping_cart),
             _buildMyCart(),
@@ -75,76 +78,148 @@ class _CustomerDashboardPageState extends State<CustomerDashboardPage> {
   }
 
   Widget _buildOrderSummary() {
-    return Card(
-      color: TColors.darkerGrey,
-      elevation: 0,
-      child: ListTile(
-        title:
-            Text('Total Orders', style: Theme.of(context).textTheme.labelLarge),
-        subtitle: Text(orders.length.toString(),
-            style: Theme.of(context).textTheme.labelLarge),
-      ),
+    final firestore = FirebaseFirestore.instance;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: firestore.collection('orders').snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final orders = snapshot.data!.docs;
+          return Card(
+            color: TColors.darkerGrey,
+            elevation: 0,
+            child: ListTile(
+              title: Text(
+                'Total Orders',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              subtitle: Text(
+                orders.length.toString(),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text('Error: ${snapshot.error}'),
+          );
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
     );
   }
 
   Widget _buildMyFavorites() {
-    // Replace this with your widget to display the customer's favorites
-    // You can use a ListView.builder or another suitable widget
-    return Container(
-      height: 150,
-      decoration: BoxDecoration(
-        color: TColors.darkerGrey,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Center(
-        child: Text('List of My Favorites',
-            style: Theme.of(context).textTheme.labelLarge),
-      ),
-    );
-  }
+    final firestore = FirebaseFirestore.instance;
 
-  Widget _buildLoyaltyPoints() {
-    return Card(
-      elevation: 0,
-      color: TColors.darkerGrey,
-      child: ListTile(
-        title: Text('Loyalty Points',
-            style: Theme.of(context).textTheme.headlineSmall),
-        subtitle:
-            Text('150 Points', style: Theme.of(context).textTheme.labelLarge),
-      ),
-    );
-  }
-
-  Widget _buildMyCart() {
-    return Container(
-      color: TColors.darkGrey,
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: cart.length,
-        itemBuilder: (context, index) {
-          final productId = cart.keys.elementAt(index);
-          final product = products.firstWhere((p) => p['id'] == productId);
-          final quantity = cart[productId];
-
-          return Card(
-            elevation: 0,
-            child: ListTile(
-              title: Text('${product['name']} (\$${product['price']})',
-                  style: Theme.of(context).textTheme.headlineLarge),
-              subtitle: Text('Quantity: $quantity',
-                  style: Theme.of(context).textTheme.headlineLarge),
-              trailing: IconButton(
-                icon: const Icon(Icons.remove_shopping_cart),
-                onPressed: () {
-                  _removeFromCart(productId);
+    return StreamBuilder<QuerySnapshot>(
+      stream: firestore.collection('favorite').snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final favorites = snapshot.data!.docs;
+          return Container(
+            decoration: BoxDecoration(
+              color: TColors.darkerGrey,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: SizedBox(
+              height: 200, // Provide a fixed height or use another constraint
+              child: ListView.builder(
+                itemCount: favorites.length,
+                itemBuilder: (context, index) {
+                  final favorite =
+                      favorites[index].data() as Map<String, dynamic>;
+                  return ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        favorite['shopImageUrl'],
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    title: Text(favorite['shopName']),
+                    subtitle: Text(favorite['shoptype']),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        // Remove the favorite from the collection
+                        firestore
+                            .collection('favorite')
+                            .doc(favorites[index].id)
+                            .delete();
+                      },
+                    ),
+                  );
                 },
               ),
             ),
           );
-        },
-      ),
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text('Error: ${snapshot.error}'),
+          );
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildMyCart() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          color: TColors.darkGrey,
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: cart.length,
+            itemBuilder: (context, index) {
+              final productId = cart.keys.elementAt(index);
+              final product = products.firstWhere((p) => p['id'] == productId);
+              final quantity = cart[productId];
+
+              return Card(
+                elevation: 0,
+                child: ListTile(
+                  title: Text('${product['name']} (\$${product['price']})',
+                      style: Theme.of(context).textTheme.headlineLarge),
+                  subtitle: Text('Quantity: $quantity',
+                      style: Theme.of(context).textTheme.headlineLarge),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.remove_shopping_cart),
+                    onPressed: () {
+                      _removeFromCart(productId);
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CartScreen()),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: TColors.light,
+            foregroundColor: TColors.dark,
+          ),
+          child: const Text('View Cart'),
+        ),
+      ],
     );
   }
 
