@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:my_shop/views/ShopHomePage/view/product_update_page.dart';
 
 class AvailableStockPage extends StatefulWidget {
   const AvailableStockPage({super.key});
@@ -37,6 +38,7 @@ class _AvailableStockPageState extends State<AvailableStockPage> {
             ),
           ),
           Expanded(
+            flex: 1,
             child: StreamBuilder<QuerySnapshot>(
               stream: shopId != null
                   ? FirebaseFirestore.instance
@@ -50,22 +52,28 @@ class _AvailableStockPageState extends State<AvailableStockPage> {
                 if (snapshot.hasData) {
                   final products = snapshot.data!.docs;
                   if (products.isNotEmpty) {
-                    return GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.8,
-                      ),
+                    return ListView.builder(
                       itemCount: products.length,
                       itemBuilder: (context, index) {
                         final product = products[index];
-                        return ProductCard(
-                          name: product['name'],
-                          price: product['price'],
-                          description: product['description'],
-                          imageUrl: product['imageUrl'],
-                          quantity: product['quantity'],
-                          documentId: product.id,
+                        final documentId = product.id;
+                        return InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (ctx) =>
+                                    ProductUpdatePage(documentId: documentId),
+                              ),
+                            );
+                          },
+                          child: ProductCard(
+                            name: product['name'],
+                            price: product['price'],
+                            description: product['description'],
+                            imageUrl: product['imageUrl'],
+                            quantity: product['quantity'],
+                            documentId: documentId,
+                          ),
                         );
                       },
                     );

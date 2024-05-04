@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:givestarreviews/givestarreviews.dart';
 import 'package:my_shop/Backend/fetchhelpers.dart';
@@ -16,7 +18,23 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
+final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+final FirebaseAuth _auth = FirebaseAuth.instance;
 final FetchHelpers fetchHelpers = FetchHelpers();
+Future<String?> getShopId() async {
+  final user = _auth.currentUser;
+  if (user != null) {
+    final shopDoc =
+        await _firestore.collection('shopkeepers').doc(user.uid).get();
+    if (shopDoc.exists) {
+      final shopData = shopDoc.data();
+      if (shopData != null && shopData.containsKey('shopId')) {
+        return shopData['shopId'];
+      }
+    }
+  }
+  return null;
+}
 
 class _HomeTabState extends State<HomeTab> {
   @override
@@ -215,18 +233,25 @@ class _HomeTabState extends State<HomeTab> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        InkWell(
-                          onTap: () {
-                            // Navigator.of(context)
-                            //     .push(MaterialPageRoute(builder: (context) {
-                            //   // return const ShopkeeperOrdersPage(shopId: shopId);
-                            // }));
-                          },
-                          child: const ManagmentCard(
-                            imageurl: "assets/icons/order-delivery.png",
-                            labeltext: "Orders",
-                          ),
-                        ),
+                       InkWell(
+  onTap: () async {
+    final shopId = await getShopId();
+    if (shopId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ShopkeeperOrdersPage(shopId: shopId),
+        ),
+      );
+    } else {
+      // Handle the case when shopId is null
+      // e.g., show an error message or perform any other action
+    }
+  },
+  child: const ManagmentCard(
+    imageurl: "assets/icons/order-delivery.png",
+    labeltext: "Orders",
+  ),
+),
                         InkWell(
                           onTap: () {
                             Navigator.of(context)

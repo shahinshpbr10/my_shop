@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
+
 import 'package:my_shop/common/widgets/widgets/pageheading.dart';
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/CustomerHome/pages/order_details_page.dart';
 
 class MyOrdersCustomerPage extends StatefulWidget {
   const MyOrdersCustomerPage({super.key});
@@ -122,8 +123,11 @@ class _MyOrdersCustomerPageState extends State<MyOrdersCustomerPage> {
     BuildContext context,
     Map<String, dynamic> orderData,
   ) {
-    // Add navigation logic to the order details page for customers
-    // For now, let's print the order details to the console
-    print('Order Details: $orderData');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderDetailPage(orderData: orderData),
+      ),
+    );
   }
 }

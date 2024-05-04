@@ -6,17 +6,44 @@ import 'package:my_shop/views/CustomerHome/managers/cart_manager.dart';
 import 'package:my_shop/views/CustomerHome/pages/product_detail_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ShopDetailsScreen extends StatelessWidget {
+class ShopDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> shopData;
 
   const ShopDetailsScreen({super.key, required this.shopData});
+
+  @override
+  _ShopDetailsScreenState createState() => _ShopDetailsScreenState();
+}
+
+class _ShopDetailsScreenState extends State<ShopDetailsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<QueryDocumentSnapshot> _filterProducts(
+      List<QueryDocumentSnapshot> products) {
+    if (_searchQuery.isEmpty) {
+      return products;
+    }
+
+    return products.where((product) {
+      final productData = product.data() as Map<String, dynamic>;
+      final productName = productData['name']?.toString().toLowerCase() ?? '';
+      return productName.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: TColors.black,
       appBar: AppBar(
-        title: Text(shopData['shopName']),
+        title: Text(widget.shopData['shopName']),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -25,24 +52,24 @@ class ShopDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.network(
-                shopData['shopImageUrl'],
+                widget.shopData['shopImageUrl'],
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
               const SizedBox(height: 16.0),
               Text(
-                'Owner: ${shopData['ownerName']}',
+                'Owner: ${widget.shopData['ownerName']}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8.0),
               Text(
-                'Shop Type: ${shopData['shopType']}',
+                'Shop Type: ${widget.shopData['shopType']}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8.0),
               Text(
-                'Address: ${shopData['shopAddress']}',
+                'Address: ${widget.shopData['shopAddress']}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16.0),
@@ -51,7 +78,7 @@ class ShopDetailsScreen extends StatelessWidget {
                   const Icon(Icons.phone),
                   const SizedBox(width: 8.0),
                   Text(
-                    'Phone: ${shopData['contactNumber']}',
+                    'Phone: ${widget.shopData['contactNumber']}',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],
@@ -62,7 +89,7 @@ class ShopDetailsScreen extends StatelessWidget {
                   const Icon(Icons.email),
                   const SizedBox(width: 8.0),
                   Text(
-                    'Email: ${shopData['email']}',
+                    'Email: ${widget.shopData['email']}',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],
@@ -73,13 +100,13 @@ class ShopDetailsScreen extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: () =>
-                        _launchURL(shopData['websiteUrl'], context),
+                        _launchURL(widget.shopData['websiteUrl'], context),
                     child: const Text('Visit Website'),
                   ),
                   const SizedBox(width: 16.0),
                   ElevatedButton(
-                    onPressed: () =>
-                        _makePhoneCall(shopData['contactNumber'], context),
+                    onPressed: () => _makePhoneCall(
+                        widget.shopData['contactNumber'], context),
                     child: const Text('Call'),
                   ),
                 ],
@@ -88,6 +115,19 @@ class ShopDetailsScreen extends StatelessWidget {
               Text(
                 "Available Products from Shop",
                 style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search products...',
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
               ),
               const SizedBox(height: 16.0),
               _buildProductList(context),
@@ -124,7 +164,7 @@ class ShopDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildProductList(BuildContext context) {
-    final String? shopId = shopData['shopId'];
+    final String? shopId = widget.shopData['shopId'];
     if (shopId == null) {
       print('Shop ID is null.');
       return const Text('Shop ID is not available.');
@@ -134,7 +174,7 @@ class ShopDetailsScreen extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('products')
           .where('shopId', isEqualTo: shopId)
-          .orderBy('name') // Make sure the index for this query is created.
+          .orderBy('name')
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -152,7 +192,9 @@ class ShopDetailsScreen extends StatelessWidget {
           return const Text('No products available for this shop.');
         }
 
-        print('${docs.length} products found for shopId: $shopId');
+        final filteredProducts = _filterProducts(docs);
+
+        print('${filteredProducts.length} products found for shopId: $shopId');
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -162,9 +204,10 @@ class ShopDetailsScreen extends StatelessWidget {
             crossAxisSpacing: 8.0,
             childAspectRatio: 0.8,
           ),
-          itemCount: docs.length,
+          itemCount: filteredProducts.length,
           itemBuilder: (context, index) {
-            var productData = docs[index].data() as Map<String, dynamic>;
+            var productData =
+                filteredProducts[index].data() as Map<String, dynamic>;
             var productImageUrl = productData['imageUrl'] as String? ??
                 'https://via.placeholder.com/150'; // Provide a placeholder image URL
             var productName = productData['name'] as String? ?? 'No Name';
@@ -181,7 +224,6 @@ class ShopDetailsScreen extends StatelessWidget {
                     builder: (context) => ProductDetailScreen(
                       productData: productData,
                       availableSizes: availableSizes,
-                     
                     ),
                   ),
                 );

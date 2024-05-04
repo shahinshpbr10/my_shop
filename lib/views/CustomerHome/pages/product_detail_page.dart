@@ -91,6 +91,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final User? user = _auth.currentUser;
     if (user != null) {
       final String userId = user.uid;
+      final String shopId =
+          widget.productData['shopId']; // Get the shopId from productData
 
       // Get a reference to the "cart" collection
       final CollectionReference cartCollection = _firestore.collection('cart');
@@ -98,6 +100,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // Create a document for the product in the "cart" collection
       await cartCollection.doc().set({
         'userId': userId, // Add the user's ID to the document
+        'shopId': shopId, // Add the shopId to the document
         'name': widget.productData['name'],
         'price': widget.productData['price'],
         'imageUrl': widget.productData['imageUrl'],

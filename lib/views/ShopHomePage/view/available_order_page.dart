@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/constants/color.dart';
+import 'package:my_shop/views/ShopHomePage/view/order_detail_page.dart';
 
 class ShopkeeperOrdersPage extends StatefulWidget {
   final String shopId;
 
-  const ShopkeeperOrdersPage({Key? key, required this.shopId})
-      : super(key: key);
+  const ShopkeeperOrdersPage({required this.shopId, super.key});
 
   @override
-  State<ShopkeeperOrdersPage> createState() => _ShopkeeperOrdersPageState();
+  _ShopkeeperOrdersPageState createState() => _ShopkeeperOrdersPageState();
 }
 
 class _ShopkeeperOrdersPageState extends State<ShopkeeperOrdersPage> {
@@ -34,17 +34,35 @@ class _ShopkeeperOrdersPageState extends State<ShopkeeperOrdersPage> {
               itemCount: orders.length,
               itemBuilder: (context, index) {
                 final order = orders[index].data() as Map<String, dynamic>;
+                final items = order['items'] as List<dynamic>;
                 return Card(
                   color: TColors.darkerGrey,
-                  child: ListTile(
-                    title: Text('Order #${order['orderId']}'),
-                    subtitle: Text('Total: \$${order['totalAmount']}'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: () {
-                        // Navigate to order details page
-                      },
-                    ),
+                  child: ExpansionTile(
+                    title: Text('View Your Orders'),
+                    children: items
+                        .map(
+                          (item) => InkWell(
+                            onTap: () {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (ctx) {
+                                return OrderDetailsPage(
+                                  orderData: order,
+                                );
+                              }));
+                            },
+                            child: ListTile(
+                              title: Text(item['name']),
+                              subtitle: Text('\$${item['price']}'),
+                              trailing: Image.network(
+                                item['imageUrl'],
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
                 );
               },

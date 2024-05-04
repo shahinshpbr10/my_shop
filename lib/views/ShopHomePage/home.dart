@@ -8,7 +8,9 @@ import 'package:my_shop/views/ShopHomePage/tabs/qr_tab.dart';
 import 'package:my_shop/views/ShopHomePage/tabs/settings_tab.dart';
 
 class ShopkeeperHome extends StatefulWidget {
-  const ShopkeeperHome({super.key, });
+  const ShopkeeperHome({
+    super.key,
+  });
 
   @override
   State<ShopkeeperHome> createState() => _ShopkeeperHomeState();
@@ -19,7 +21,7 @@ class _ShopkeeperHomeState extends State<ShopkeeperHome> {
   final List<Widget> _pages = [
     const HomeTab(),
     const CustomerTab(),
-    const QRScannerScreen(),
+    AddProductScreen(),
     const AccountingTab(),
     const SettingsTab()
   ];
@@ -38,7 +40,7 @@ class _ShopkeeperHomeState extends State<ShopkeeperHome> {
             items: const <Widget>[
               Icon(Icons.home_rounded, size: 30),
               Icon(Icons.people_alt, size: 30),
-              Icon(Icons.qr_code_scanner_rounded, size: 30),
+              Icon(Icons.add, size: 30),
               Icon(Icons.sticky_note_2_outlined, size: 30),
               Icon(Icons.settings_outlined, size: 30)
             ],

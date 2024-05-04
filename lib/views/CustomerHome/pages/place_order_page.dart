@@ -276,18 +276,40 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
           .collection('cart')
           .where('userId', isEqualTo: userId)
           .get();
+      final cartItems = cartItemsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'shopId': data['shopId'], // Include the shopId
+          'name': data['name'],
+          'price': data['price'],
+          'imageUrl': data['imageUrl'],
+          'sizes': data['sizes'], // Add any other relevant product data
+        };
+      }).toList();
 
-      final cartItems =
-          cartItemsSnapshot.docs.map((doc) => doc.data()).toList();
+      // Group the cart items by shopId
+      final itemsByShop = groupBy(cartItems, (item) => item['shopId']);
 
-      // Create a new order document in the "orders" collection
-      await FirebaseFirestore.instance.collection('orders').add({
-        'userId': userId,
-        'address': _userAddress,
-        'paymentMethod': _paymentMethod,
-        'items': cartItems,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      // Create a separate order document for each shop
+      for (final shopId in itemsByShop.keys) {
+        final shopItems = itemsByShop[shopId]!;
+
+        // Generate a unique order ID
+        final orderId =
+            FirebaseFirestore.instance.collection('orders').doc().id;
+
+        // Create a new order document in the "orders" collection
+        await FirebaseFirestore.instance.collection('orders').doc(orderId).set({
+          'userId': userId,
+          'shopId': shopId, // Include the shopId for this order
+          'orderId': orderId, // Include the order ID
+          'address': _userAddress,
+          'paymentMethod': _paymentMethod,
+          'items': shopItems,
+          'createdAt': FieldValue.serverTimestamp(),
+          'status': 'Waiting for shop confirmation', // Initial status
+        });
+      }
 
       // Clear the cart
       final batch = FirebaseFirestore.instance.batch();
@@ -303,5 +325,15 @@ class _PlaceOrderPageState extends State<PlaceOrderPage> {
         ),
       );
     }
+  }
+
+  /// Groups the items by the given key function.
+  Map<K, List<V>> groupBy<K, V>(Iterable<V> items, K Function(V) key) {
+    final map = <K, List<V>>{};
+    for (final item in items) {
+      final itemKey = key(item);
+      map.putIfAbsent(itemKey, () => []).add(item);
+    }
+    return map;
   }
 }
